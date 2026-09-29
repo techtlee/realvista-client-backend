@@ -30,7 +30,15 @@ export const Users: CollectionConfig = {
     singular: { cs: 'Uživatel', en: 'User' },
     plural: { cs: 'Uživatelé', en: 'Users' },
   },
-  auth: true,
+  auth: {
+    /**
+     * Generated sites authenticate with an API key belonging to a read-only
+     * service user that is a member of exactly one tenant. That is what keeps a
+     * leaked env var on one client's site from reading another client's data —
+     * defence in depth behind the server-side access functions.
+     */
+    useAPIKey: true,
+  },
   admin: {
     useAsTitle: 'email',
     defaultColumns: ['email', 'name', 'platformRole'],
