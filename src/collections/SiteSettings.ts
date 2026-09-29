@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { isPlatformAdmin, tenantBaseListFilter, tenantRead, tenantWrite } from '../access/tenantScoped'
+import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidateTenantSite'
 
 /**
  * Everything on the site that is not a listing or a blog post.
@@ -30,6 +31,8 @@ export const SiteSettings: CollectionConfig = {
     group: { cs: 'Web', en: 'Site' },
   },
   hooks: {
+    afterChange: [revalidateAfterChange('site-settings')],
+    afterDelete: [revalidateAfterDelete('site-settings')],
     beforeChange: [
       async ({ operation, data, req }) => {
         if (operation !== 'create') return data

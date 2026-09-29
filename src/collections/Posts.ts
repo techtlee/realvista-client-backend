@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { tenantAccess, tenantBaseListFilter } from '../access/tenantScoped'
 import { slugifyCzech } from '../lib/czech'
+import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidateTenantSite'
 
 /** Blog — optional per site, toggled by a feature flag in the site config. */
 export const Posts: CollectionConfig = {
@@ -21,6 +22,8 @@ export const Posts: CollectionConfig = {
   versions: { drafts: true },
   defaultSort: '-publishedAt',
   hooks: {
+    afterChange: [revalidateAfterChange('posts')],
+    afterDelete: [revalidateAfterDelete('posts')],
     beforeValidate: [
       ({ data }) => {
         if (!data) return data

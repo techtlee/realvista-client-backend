@@ -43,6 +43,16 @@ export const Users: CollectionConfig = {
     useAsTitle: 'email',
     defaultColumns: ['email', 'name', 'platformRole'],
     group: { cs: 'Platforma', en: 'Platform' },
+    /**
+     * Invisible to realtors.
+     *
+     * They cannot create, delete, or edit anyone but themselves anyway, so the
+     * collection offered them nothing except a "Platforma" heading that hints
+     * at machinery they are not part of. Their own email and password live on
+     * /admin/account, which Payload provides separately.
+     */
+    hidden: ({ user }) =>
+      (user as { platformRole?: string } | undefined)?.platformRole !== 'platform-admin',
   },
   access: {
     // A realtor may see co-tenant users (their colleagues), nobody else.

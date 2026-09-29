@@ -32,18 +32,23 @@ export default buildConfig({
     },
   },
 
+  /**
+   * Order drives the admin nav. Content first, because that is what a realtor
+   * opens the panel to do; the platform collections are staff-only and several
+   * are hidden from clients entirely.
+   */
   collections: [
-    // Platform
-    Tenants,
-    Users,
-    Leads,
     // Per-tenant content
-    SiteSettings,
     Properties,
     Posts,
     Services,
     Enquiries,
     Media,
+    SiteSettings,
+    // Platform
+    Tenants,
+    Users,
+    Leads,
   ],
 
   editor: lexicalEditor(),

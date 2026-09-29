@@ -308,6 +308,10 @@ async function main() {
       status: 'live',
       theme: { name: 'realvista', variant: 'indigo' },
       hosting: { platformSubdomain: 'demo.makleri.cz', siteUrl: 'http://localhost:3001' },
+      // Authenticates cache purges to the site. Provisioning generates this
+      // per tenant; the demo uses a fixed value so .env.local stays stable
+      // across reseeds.
+      revalidateSecret: 'demo-revalidate-secret',
     },
     overrideAccess: true,
   })

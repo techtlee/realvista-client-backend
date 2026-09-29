@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { tenantAccess, tenantBaseListFilter } from '../access/tenantScoped'
+import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidateTenantSite'
 
 /** Služby — what the realtor offers, rendered as the services section. */
 export const Services: CollectionConfig = {
@@ -17,6 +18,10 @@ export const Services: CollectionConfig = {
     group: { cs: 'Obsah', en: 'Content' },
   },
   defaultSort: 'order',
+  hooks: {
+    afterChange: [revalidateAfterChange('services')],
+    afterDelete: [revalidateAfterDelete('services')],
+  },
   fields: [
     { name: 'title', type: 'text', required: true, localized: true, label: { cs: 'Název' } },
     { name: 'description', type: 'textarea', localized: true, label: { cs: 'Popis' } },

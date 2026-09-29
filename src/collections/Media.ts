@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { tenantAccess, tenantBaseListFilter, tenantIdsFor } from '../access/tenantScoped'
+import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidateTenantSite'
 
 /**
  * Resolves the tenant id a document belongs to, from the payload being written
@@ -45,6 +46,8 @@ export const Media: CollectionConfig = {
     group: { cs: 'Obsah', en: 'Content' },
   },
   hooks: {
+    afterChange: [revalidateAfterChange('media')],
+    afterDelete: [revalidateAfterDelete('media')],
     beforeValidate: [
       ({ data, req, operation }) => {
         if (operation !== 'create' || !data) return data

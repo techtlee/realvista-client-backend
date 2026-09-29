@@ -67,15 +67,15 @@ export interface Config {
   };
   blocks: {};
   collections: {
-    tenants: Tenant;
-    users: User;
-    leads: Lead;
-    'site-settings': SiteSetting;
     properties: Property;
     posts: Post;
     services: Service;
     enquiries: Enquiry;
     media: Media;
+    'site-settings': SiteSetting;
+    tenants: Tenant;
+    users: User;
+    leads: Lead;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -83,15 +83,15 @@ export interface Config {
   };
   collectionsJoins: {};
   collectionsSelect: {
-    tenants: TenantsSelect<false> | TenantsSelect<true>;
-    users: UsersSelect<false> | UsersSelect<true>;
-    leads: LeadsSelect<false> | LeadsSelect<true>;
-    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     properties: PropertiesSelect<false> | PropertiesSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
     services: ServicesSelect<false> | ServicesSelect<true>;
     enquiries: EnquiriesSelect<false> | EnquiriesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    tenants: TenantsSelect<false> | TenantsSelect<true>;
+    users: UsersSelect<false> | UsersSelect<true>;
+    leads: LeadsSelect<false> | LeadsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -129,347 +129,6 @@ export interface UserAuthOperations {
   unlock: {
     email: string;
     password: string;
-  };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "tenants".
- */
-export interface Tenant {
-  id: number;
-  name: string;
-  /**
-   * Used in the repo name and subdomain. Do not change after creation.
-   */
-  slug: string;
-  status: 'provisioning' | 'awaiting-dns' | 'live' | 'suspended' | 'cancelled';
-  theme: {
-    name: 'realvista';
-    variant: 'indigo' | 'crimson' | 'clay' | 'mono';
-  };
-  hosting?: {
-    /**
-     * No protocol
-     */
-    domain?: string | null;
-    /**
-     * Always attached at provisioning so the site works before DNS is set.
-     */
-    platformSubdomain?: string | null;
-    /**
-     * Revalidation target. Set by provisioning.
-     */
-    siteUrl?: string | null;
-    githubRepo?: string | null;
-    vercelProjectId?: string | null;
-  };
-  revalidateSecret?: string | null;
-  /**
-   * Controls how fast theme updates reach this site.
-   */
-  ring?: ('canary' | 'stable' | 'frozen') | null;
-  /**
-   * Each step is recorded so a failure resumes rather than restarts.
-   */
-  provisioningLog?:
-    | {
-        step?: string | null;
-        status?: ('ok' | 'failed' | 'skipped') | null;
-        at?: string | null;
-        detail?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
- */
-export interface User {
-  id: number;
-  name?: string | null;
-  platformRole: 'platform-admin' | 'client';
-  tenants?:
-    | {
-        tenant: number | Tenant;
-        role: 'owner' | 'editor';
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt: string;
-  createdAt: string;
-  enableAPIKey?: boolean | null;
-  apiKey?: string | null;
-  apiKeyIndex?: string | null;
-  hasAPIKey?: boolean | null;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  resetPasswordRequestedAt?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  sessions?:
-    | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
-      }[]
-    | null;
-  password?: string | null;
-  collection: 'users';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "leads".
- */
-export interface Lead {
-  id: number;
-  name: string;
-  email: string;
-  phone?: string | null;
-  ico?: string | null;
-  companyName?: string | null;
-  /**
-   * Firma a adresa byly načteny podle IČO z registru ARES.
-   */
-  aresVerified?: boolean | null;
-  chosen?: {
-    /**
-     * Předvyplněno podle toho, na co zájemce klikl v galerii.
-     */
-    theme?: string | null;
-    variant?: string | null;
-  };
-  domain?: {
-    situation?: ('have-access' | 'have-no-access' | 'none') | null;
-    name?: string | null;
-    registrar?: ('wedos' | 'forpsi' | 'active24' | 'websupport' | 'gransy' | 'other' | 'unknown') | null;
-    /**
-     * Rozhoduje o tom, zda lze měnit nameservery. Pokud na doméně běží e-mail, nastavujeme pouze A a CNAME záznamy — jinak hrozí výpadek pošty.
-     */
-    emailOnDomain?: ('yes' | 'no' | 'unknown') | null;
-  };
-  portfolioSize?: ('1-5' | '6-20' | '20+') | null;
-  consent?: {
-    given?: boolean | null;
-    text?: string | null;
-    at?: string | null;
-  };
-  status?: ('new' | 'contacted' | 'qualified' | 'approved' | 'provisioned' | 'rejected') | null;
-  /**
-   * Vyplní se automaticky po založení webu.
-   */
-  tenant?: (number | null) | Tenant;
-  internalNote?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "site-settings".
- */
-export interface SiteSetting {
-  id: number;
-  tenant?: (number | null) | Tenant;
-  siteName: string;
-  hero?: {
-    /**
-     * Např. „Reality nejsou jen nemovitosti. Jsou to vaše další kroky.“
-     */
-    headline?: string | null;
-    subheadline?: string | null;
-    ctaLabel?: string | null;
-    ctaHref?: string | null;
-    backgroundImage?: (number | null) | Media;
-  };
-  agent: {
-    name: string;
-    /**
-     * Např. „Realitní makléř“
-     */
-    jobTitle?: string | null;
-    /**
-     * Na výšku, min. 1000 px na kratší straně, neutrální pozadí.
-     */
-    photo?: (number | null) | Media;
-    bio?: {
-      root: {
-        type: string;
-        children: {
-          type: any;
-          version: number;
-          [k: string]: unknown;
-        }[];
-        direction: ('ltr' | 'rtl') | null;
-        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-        indent: number;
-        version: number;
-      };
-      [k: string]: unknown;
-    } | null;
-    phone?: string | null;
-    email?: string | null;
-    /**
-     * Povinný údaj podle zákona č. 39/2020 Sb. o realitním zprostředkování.
-     */
-    licenceNumber?: string | null;
-    certifications?:
-      | {
-          label?: string | null;
-          id?: string | null;
-        }[]
-      | null;
-  };
-  /**
-   * Např. „12 let / na trhu“, „450+ mil. Kč / objem obchodů“.
-   */
-  stats?:
-    | {
-        value?: string | null;
-        label?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  about?: {
-    heading?: string | null;
-    body?: {
-      root: {
-        type: string;
-        children: {
-          type: any;
-          version: number;
-          [k: string]: unknown;
-        }[];
-        direction: ('ltr' | 'rtl') | null;
-        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-        indent: number;
-        version: number;
-      };
-      [k: string]: unknown;
-    } | null;
-    image?: (number | null) | Media;
-  };
-  contact?: {
-    companyName?: string | null;
-    ico?: string | null;
-    dic?: string | null;
-    address?: string | null;
-    phone?: string | null;
-    email?: string | null;
-    officeHours?: string | null;
-    mapEmbed?: string | null;
-    social?: {
-      facebook?: string | null;
-      instagram?: string | null;
-      linkedin?: string | null;
-      youtube?: string | null;
-    };
-  };
-  branding?: {
-    logo?: (number | null) | Media;
-    logoInverse?: (number | null) | Media;
-    favicon?: (number | null) | Media;
-  };
-  legal?: {
-    privacyPolicy?: {
-      root: {
-        type: string;
-        children: {
-          type: any;
-          version: number;
-          [k: string]: unknown;
-        }[];
-        direction: ('ltr' | 'rtl') | null;
-        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-        indent: number;
-        version: number;
-      };
-      [k: string]: unknown;
-    } | null;
-    cookieNotice?: {
-      root: {
-        type: string;
-        children: {
-          type: any;
-          version: number;
-          [k: string]: unknown;
-        }[];
-        direction: ('ltr' | 'rtl') | null;
-        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-        indent: number;
-        version: number;
-      };
-      [k: string]: unknown;
-    } | null;
-    /**
-     * Zobrazí se u zaškrtávacího políčka, které musí návštěvník potvrdit před odesláním.
-     */
-    gdprConsentText?: string | null;
-  };
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
- */
-export interface Media {
-  id: number;
-  tenant?: (number | null) | Tenant;
-  /**
-   * Short description for screen readers and search engines.
-   */
-  alt?: string | null;
-  prefix?: string | null;
-  _objectKey?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-  sizes?: {
-    thumbnail?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-    card?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-    hero?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-    full?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
   };
 }
 /**
@@ -658,6 +317,117 @@ export interface Property {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tenants".
+ */
+export interface Tenant {
+  id: number;
+  name: string;
+  /**
+   * Used in the repo name and subdomain. Do not change after creation.
+   */
+  slug: string;
+  status: 'provisioning' | 'awaiting-dns' | 'live' | 'suspended' | 'cancelled';
+  theme: {
+    name: 'realvista';
+    variant: 'indigo' | 'crimson' | 'clay' | 'mono';
+  };
+  hosting?: {
+    /**
+     * No protocol
+     */
+    domain?: string | null;
+    /**
+     * Always attached at provisioning so the site works before DNS is set.
+     */
+    platformSubdomain?: string | null;
+    /**
+     * Revalidation target. Set by provisioning.
+     */
+    siteUrl?: string | null;
+    githubRepo?: string | null;
+    vercelProjectId?: string | null;
+  };
+  revalidateSecret?: string | null;
+  /**
+   * Controls how fast theme updates reach this site.
+   */
+  ring?: ('canary' | 'stable' | 'frozen') | null;
+  /**
+   * Each step is recorded so a failure resumes rather than restarts.
+   */
+  provisioningLog?:
+    | {
+        step?: string | null;
+        status?: ('ok' | 'failed' | 'skipped') | null;
+        at?: string | null;
+        detail?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media".
+ */
+export interface Media {
+  id: number;
+  tenant?: (number | null) | Tenant;
+  /**
+   * Short description for screen readers and search engines.
+   */
+  alt?: string | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    card?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    hero?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    full?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "posts".
  */
 export interface Post {
@@ -740,6 +510,236 @@ export interface Enquiry {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  tenant?: (number | null) | Tenant;
+  siteName: string;
+  hero?: {
+    /**
+     * Např. „Reality nejsou jen nemovitosti. Jsou to vaše další kroky.“
+     */
+    headline?: string | null;
+    subheadline?: string | null;
+    ctaLabel?: string | null;
+    ctaHref?: string | null;
+    backgroundImage?: (number | null) | Media;
+  };
+  agent: {
+    name: string;
+    /**
+     * Např. „Realitní makléř“
+     */
+    jobTitle?: string | null;
+    /**
+     * Na výšku, min. 1000 px na kratší straně, neutrální pozadí.
+     */
+    photo?: (number | null) | Media;
+    bio?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+    phone?: string | null;
+    email?: string | null;
+    /**
+     * Povinný údaj podle zákona č. 39/2020 Sb. o realitním zprostředkování.
+     */
+    licenceNumber?: string | null;
+    certifications?:
+      | {
+          label?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  /**
+   * Např. „12 let / na trhu“, „450+ mil. Kč / objem obchodů“.
+   */
+  stats?:
+    | {
+        value?: string | null;
+        label?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  about?: {
+    heading?: string | null;
+    body?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+    image?: (number | null) | Media;
+  };
+  contact?: {
+    companyName?: string | null;
+    ico?: string | null;
+    dic?: string | null;
+    address?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    officeHours?: string | null;
+    mapEmbed?: string | null;
+    social?: {
+      facebook?: string | null;
+      instagram?: string | null;
+      linkedin?: string | null;
+      youtube?: string | null;
+    };
+  };
+  branding?: {
+    logo?: (number | null) | Media;
+    logoInverse?: (number | null) | Media;
+    favicon?: (number | null) | Media;
+  };
+  legal?: {
+    privacyPolicy?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+    cookieNotice?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+    /**
+     * Zobrazí se u zaškrtávacího políčka, které musí návštěvník potvrdit před odesláním.
+     */
+    gdprConsentText?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users".
+ */
+export interface User {
+  id: number;
+  name?: string | null;
+  platformRole: 'platform-admin' | 'client';
+  tenants?:
+    | {
+        tenant: number | Tenant;
+        role: 'owner' | 'editor';
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+  enableAPIKey?: boolean | null;
+  apiKey?: string | null;
+  apiKeyIndex?: string | null;
+  hasAPIKey?: boolean | null;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  resetPasswordRequestedAt?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'users';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "leads".
+ */
+export interface Lead {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string | null;
+  ico?: string | null;
+  companyName?: string | null;
+  /**
+   * Firma a adresa byly načteny podle IČO z registru ARES.
+   */
+  aresVerified?: boolean | null;
+  chosen?: {
+    /**
+     * Předvyplněno podle toho, na co zájemce klikl v galerii.
+     */
+    theme?: string | null;
+    variant?: string | null;
+  };
+  domain?: {
+    situation?: ('have-access' | 'have-no-access' | 'none') | null;
+    name?: string | null;
+    registrar?: ('wedos' | 'forpsi' | 'active24' | 'websupport' | 'gransy' | 'other' | 'unknown') | null;
+    /**
+     * Rozhoduje o tom, zda lze měnit nameservery. Pokud na doméně běží e-mail, nastavujeme pouze A a CNAME záznamy — jinak hrozí výpadek pošty.
+     */
+    emailOnDomain?: ('yes' | 'no' | 'unknown') | null;
+  };
+  portfolioSize?: ('1-5' | '6-20' | '20+') | null;
+  consent?: {
+    given?: boolean | null;
+    text?: string | null;
+    at?: string | null;
+  };
+  status?: ('new' | 'contacted' | 'qualified' | 'approved' | 'provisioned' | 'rejected') | null;
+  /**
+   * Vyplní se automaticky po založení webu.
+   */
+  tenant?: (number | null) | Tenant;
+  internalNote?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -763,22 +763,6 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
-        relationTo: 'tenants';
-        value: number | Tenant;
-      } | null)
-    | ({
-        relationTo: 'users';
-        value: number | User;
-      } | null)
-    | ({
-        relationTo: 'leads';
-        value: number | Lead;
-      } | null)
-    | ({
-        relationTo: 'site-settings';
-        value: number | SiteSetting;
-      } | null)
-    | ({
         relationTo: 'properties';
         value: number | Property;
       } | null)
@@ -797,6 +781,22 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'site-settings';
+        value: number | SiteSetting;
+      } | null)
+    | ({
+        relationTo: 'tenants';
+        value: number | Tenant;
+      } | null)
+    | ({
+        relationTo: 'users';
+        value: number | User;
+      } | null)
+    | ({
+        relationTo: 'leads';
+        value: number | Lead;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -839,202 +839,6 @@ export interface PayloadMigration {
   batch?: number | null;
   updatedAt: string;
   createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "tenants_select".
- */
-export interface TenantsSelect<T extends boolean = true> {
-  name?: T;
-  slug?: T;
-  status?: T;
-  theme?:
-    | T
-    | {
-        name?: T;
-        variant?: T;
-      };
-  hosting?:
-    | T
-    | {
-        domain?: T;
-        platformSubdomain?: T;
-        siteUrl?: T;
-        githubRepo?: T;
-        vercelProjectId?: T;
-      };
-  revalidateSecret?: T;
-  ring?: T;
-  provisioningLog?:
-    | T
-    | {
-        step?: T;
-        status?: T;
-        at?: T;
-        detail?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users_select".
- */
-export interface UsersSelect<T extends boolean = true> {
-  name?: T;
-  platformRole?: T;
-  tenants?:
-    | T
-    | {
-        tenant?: T;
-        role?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  enableAPIKey?: T;
-  apiKey?: T;
-  apiKeyIndex?: T;
-  hasAPIKey?: T;
-  email?: T;
-  resetPasswordToken?: T;
-  resetPasswordExpiration?: T;
-  salt?: T;
-  hash?: T;
-  resetPasswordRequestedAt?: T;
-  loginAttempts?: T;
-  lockUntil?: T;
-  sessions?:
-    | T
-    | {
-        id?: T;
-        createdAt?: T;
-        expiresAt?: T;
-      };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "leads_select".
- */
-export interface LeadsSelect<T extends boolean = true> {
-  name?: T;
-  email?: T;
-  phone?: T;
-  ico?: T;
-  companyName?: T;
-  aresVerified?: T;
-  chosen?:
-    | T
-    | {
-        theme?: T;
-        variant?: T;
-      };
-  domain?:
-    | T
-    | {
-        situation?: T;
-        name?: T;
-        registrar?: T;
-        emailOnDomain?: T;
-      };
-  portfolioSize?: T;
-  consent?:
-    | T
-    | {
-        given?: T;
-        text?: T;
-        at?: T;
-      };
-  status?: T;
-  tenant?: T;
-  internalNote?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "site-settings_select".
- */
-export interface SiteSettingsSelect<T extends boolean = true> {
-  tenant?: T;
-  siteName?: T;
-  hero?:
-    | T
-    | {
-        headline?: T;
-        subheadline?: T;
-        ctaLabel?: T;
-        ctaHref?: T;
-        backgroundImage?: T;
-      };
-  agent?:
-    | T
-    | {
-        name?: T;
-        jobTitle?: T;
-        photo?: T;
-        bio?: T;
-        phone?: T;
-        email?: T;
-        licenceNumber?: T;
-        certifications?:
-          | T
-          | {
-              label?: T;
-              id?: T;
-            };
-      };
-  stats?:
-    | T
-    | {
-        value?: T;
-        label?: T;
-        id?: T;
-      };
-  about?:
-    | T
-    | {
-        heading?: T;
-        body?: T;
-        image?: T;
-      };
-  contact?:
-    | T
-    | {
-        companyName?: T;
-        ico?: T;
-        dic?: T;
-        address?: T;
-        phone?: T;
-        email?: T;
-        officeHours?: T;
-        mapEmbed?: T;
-        social?:
-          | T
-          | {
-              facebook?: T;
-              instagram?: T;
-              linkedin?: T;
-              youtube?: T;
-            };
-      };
-  branding?:
-    | T
-    | {
-        logo?: T;
-        logoInverse?: T;
-        favicon?: T;
-      };
-  legal?:
-    | T
-    | {
-        privacyPolicy?: T;
-        cookieNotice?: T;
-        gdprConsentText?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1238,6 +1042,202 @@ export interface MediaSelect<T extends boolean = true> {
               filename?: T;
             };
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  tenant?: T;
+  siteName?: T;
+  hero?:
+    | T
+    | {
+        headline?: T;
+        subheadline?: T;
+        ctaLabel?: T;
+        ctaHref?: T;
+        backgroundImage?: T;
+      };
+  agent?:
+    | T
+    | {
+        name?: T;
+        jobTitle?: T;
+        photo?: T;
+        bio?: T;
+        phone?: T;
+        email?: T;
+        licenceNumber?: T;
+        certifications?:
+          | T
+          | {
+              label?: T;
+              id?: T;
+            };
+      };
+  stats?:
+    | T
+    | {
+        value?: T;
+        label?: T;
+        id?: T;
+      };
+  about?:
+    | T
+    | {
+        heading?: T;
+        body?: T;
+        image?: T;
+      };
+  contact?:
+    | T
+    | {
+        companyName?: T;
+        ico?: T;
+        dic?: T;
+        address?: T;
+        phone?: T;
+        email?: T;
+        officeHours?: T;
+        mapEmbed?: T;
+        social?:
+          | T
+          | {
+              facebook?: T;
+              instagram?: T;
+              linkedin?: T;
+              youtube?: T;
+            };
+      };
+  branding?:
+    | T
+    | {
+        logo?: T;
+        logoInverse?: T;
+        favicon?: T;
+      };
+  legal?:
+    | T
+    | {
+        privacyPolicy?: T;
+        cookieNotice?: T;
+        gdprConsentText?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tenants_select".
+ */
+export interface TenantsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  status?: T;
+  theme?:
+    | T
+    | {
+        name?: T;
+        variant?: T;
+      };
+  hosting?:
+    | T
+    | {
+        domain?: T;
+        platformSubdomain?: T;
+        siteUrl?: T;
+        githubRepo?: T;
+        vercelProjectId?: T;
+      };
+  revalidateSecret?: T;
+  ring?: T;
+  provisioningLog?:
+    | T
+    | {
+        step?: T;
+        status?: T;
+        at?: T;
+        detail?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users_select".
+ */
+export interface UsersSelect<T extends boolean = true> {
+  name?: T;
+  platformRole?: T;
+  tenants?:
+    | T
+    | {
+        tenant?: T;
+        role?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  enableAPIKey?: T;
+  apiKey?: T;
+  apiKeyIndex?: T;
+  hasAPIKey?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  resetPasswordRequestedAt?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+  sessions?:
+    | T
+    | {
+        id?: T;
+        createdAt?: T;
+        expiresAt?: T;
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "leads_select".
+ */
+export interface LeadsSelect<T extends boolean = true> {
+  name?: T;
+  email?: T;
+  phone?: T;
+  ico?: T;
+  companyName?: T;
+  aresVerified?: T;
+  chosen?:
+    | T
+    | {
+        theme?: T;
+        variant?: T;
+      };
+  domain?:
+    | T
+    | {
+        situation?: T;
+        name?: T;
+        registrar?: T;
+        emailOnDomain?: T;
+      };
+  portfolioSize?: T;
+  consent?:
+    | T
+    | {
+        given?: T;
+        text?: T;
+        at?: T;
+      };
+  status?: T;
+  tenant?: T;
+  internalNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

@@ -15,6 +15,7 @@ import {
   TRANSACTION_TYPES,
   slugifyCzech,
 } from '../lib/czech'
+import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidateTenantSite'
 
 /**
  * Nemovitosti — the realtor's daily tool.
@@ -58,6 +59,8 @@ export const Properties: CollectionConfig = {
    */
   versions: true,
   hooks: {
+    afterChange: [revalidateAfterChange('properties')],
+    afterDelete: [revalidateAfterDelete('properties')],
     beforeValidate: [
       ({ data }) => {
         if (!data) return data

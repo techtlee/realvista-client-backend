@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { tenantAccess, tenantBaseListFilter } from '../access/tenantScoped'
+import { tenantAccess, tenantBaseListFilter, tenantWrite } from '../access/tenantScoped'
 
 /**
  * Poptávky — contact-form submissions from a client's own website.
@@ -20,7 +20,23 @@ export const Enquiries: CollectionConfig = {
     singular: { cs: 'Poptávka', en: 'Enquiry' },
     plural: { cs: 'Poptávky', en: 'Enquiries' },
   },
-  access: tenantAccess,
+  access: {
+    ...tenantAccess,
+    /**
+     * Only the website may create an enquiry.
+     *
+     * A record of what a member of the public wrote is evidence of their
+     * consent; a hand-typed one is not. Restricting creation to the site's API
+     * key also removes a "create" button that would only ever confuse a realtor
+     * — enquiries arrive, they are not authored.
+     */
+    create: (args) => {
+      const user = args.req.user as { _strategy?: string; platformRole?: string } | undefined
+      if (!user) return false
+      if (user.platformRole === 'platform-admin') return true
+      return user._strategy === 'api-key' ? tenantWrite(args) : false
+    },
+  },
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'email', 'phone', 'status', 'createdAt'],
