@@ -30,7 +30,22 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'], channel: 'chromium' },
+      use: {
+        ...devices['Desktop Chrome'],
+        /**
+         * Drives the Google Chrome already installed on the machine rather than
+         * Playwright's own Chromium build.
+         *
+         * `playwright install chromium` hangs indefinitely in this environment —
+         * the download reports 100% of 162 MiB and then sleeps forever with 428 KB
+         * on disk, while the CDN itself responds in under 100 ms. Using the
+         * installed browser removes a 162 MiB download from every setup.
+         *
+         * CI images that ship Playwright's Chromium can override with
+         * PLAYWRIGHT_CHANNEL=chromium.
+         */
+        channel: process.env.PLAYWRIGHT_CHANNEL ?? 'chrome',
+      },
     },
   ],
   webServer: {

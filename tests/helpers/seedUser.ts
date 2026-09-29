@@ -7,6 +7,13 @@ export const testUser = {
 }
 
 /**
+ * The admin-panel specs navigate collection list views, which requires platform
+ * staff. Nothing promotes users implicitly — there is deliberately no
+ * "first user becomes admin" hook — so the role is set explicitly here.
+ */
+const testUserData = { ...testUser, platformRole: 'platform-admin' as const }
+
+/**
  * Seeds a test user for e2e admin tests.
  */
 export async function seedTestUser(): Promise<void> {
@@ -14,6 +21,7 @@ export async function seedTestUser(): Promise<void> {
 
   // Delete existing test user if any
   await payload.delete({
+    overrideAccess: true,
     collection: 'users',
     where: {
       email: {
@@ -24,8 +32,9 @@ export async function seedTestUser(): Promise<void> {
 
   // Create fresh test user
   await payload.create({
+    overrideAccess: true,
     collection: 'users',
-    data: testUser,
+    data: testUserData,
   })
 }
 
@@ -36,6 +45,7 @@ export async function cleanupTestUser(): Promise<void> {
   const payload = await getPayload({ config })
 
   await payload.delete({
+    overrideAccess: true,
     collection: 'users',
     where: {
       email: {

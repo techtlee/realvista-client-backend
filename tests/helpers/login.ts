@@ -26,6 +26,8 @@ export async function login({
 
   await page.waitForURL(`${serverURL}/admin`)
 
-  const dashboardArtifact = page.locator('span[title="Dashboard"]')
+  // The admin panel is Czech-only (see i18n in payload.config.ts), so this
+  // landmark is "Nástěnka", not "Dashboard".
+  const dashboardArtifact = page.locator('span[title="Nástěnka"]')
   await expect(dashboardArtifact).toBeVisible()
 }

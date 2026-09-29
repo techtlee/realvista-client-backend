@@ -48,3 +48,11 @@ node_modules/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+.admin-credentials.local
+
+# Local test env: contains a machine-specific DATABASE_URL, not a shared secret.
+# Copy .env.test.example to .env.test and adjust the Postgres user.
+.env.test
+
+# Uploads land in object storage in production; locally they land here.
+/media
