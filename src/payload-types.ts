@@ -145,7 +145,7 @@ export interface Tenant {
   status: 'provisioning' | 'awaiting-dns' | 'live' | 'suspended' | 'cancelled';
   theme: {
     name: 'realvista';
-    variant: 'indigo' | 'sand' | 'crimson' | 'mono';
+    variant: 'indigo' | 'crimson' | 'clay' | 'mono';
   };
   hosting?: {
     /**

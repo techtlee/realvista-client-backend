@@ -83,8 +83,8 @@ export const Tenants: CollectionConfig = {
           label: { cs: 'Barevná varianta', en: 'Color variant' },
           options: [
             { value: 'indigo', label: { cs: 'Indigová', en: 'Indigo' } },
-            { value: 'sand', label: { cs: 'Písková', en: 'Sand' } },
             { value: 'crimson', label: { cs: 'Červená', en: 'Crimson' } },
+            { value: 'clay', label: { cs: 'Hnědá', en: 'Clay' } },
             { value: 'mono', label: { cs: 'Černobílá', en: 'Mono' } },
           ],
         },
