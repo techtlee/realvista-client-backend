@@ -40,6 +40,29 @@ async function placeholder(label: string, hue: number): Promise<Buffer> {
   return sharp(Buffer.from(svg)).jpeg({ quality: 82 }).toBuffer()
 }
 
+/** Payload stores rich text as a Lexical tree; this is the minimal valid shape. */
+function lexical(text: string) {
+  return {
+    root: {
+      type: 'root',
+      format: '',
+      indent: 0,
+      version: 1,
+      direction: 'ltr',
+      children: [
+        {
+          type: 'paragraph',
+          format: '',
+          indent: 0,
+          version: 1,
+          direction: 'ltr',
+          children: [{ type: 'text', text, version: 1, format: 0 }],
+        },
+      ],
+    },
+  }
+}
+
 interface Listing {
   title: string
   transactionType: 'prodej' | 'pronajem'
@@ -175,6 +198,46 @@ const LISTINGS: Listing[] = [
   },
 ]
 
+const POSTS = [
+  {
+    title: 'Jak správně určit cenu nemovitosti?',
+    category: 'rady',
+    excerpt:
+      'Správné nastavení tržní ceny je klíčem k úspěchu. Přečtěte si, jaké faktory ' +
+      'analyzuji a proč se nespoléhat jen na inzertní ceny.',
+    body:
+      'Inzertní ceny na realitních portálech nejsou ceny kupní. Rozdíl mezi nimi bývá ' +
+      'v Praze pět až deset procent, u hůře prodejných nemovitostí i více. Při odhadu ' +
+      'proto vycházím z reálně zrealizovaných obchodů v dané lokalitě, ze stavu ' +
+      'nemovitosti a z toho, jak dlouho se srovnatelné nabídky drží na trhu.',
+    hue: 24,
+  },
+  {
+    title: 'Kdy se vyplatí prodávat a kdy raději počkat',
+    category: 'trh',
+    excerpt:
+      'Načasování prodeje ovlivní výslednou cenu víc než samotná inzerce. ' +
+      'Na co se dívat, než se rozhodnete.',
+    body:
+      'Sezónnost na českém realitním trhu je slabší, než se obecně tvrdí. Mnohem větší ' +
+      'vliv má vývoj hypotečních sazeb a nabídka srovnatelných nemovitostí ve vašem ' +
+      'okolí. Pokud v okruhu několika ulic visí pět podobných bytů, vyplatí se počkat.',
+    hue: 140,
+  },
+  {
+    title: 'Co všechno potřebujete k prodeji bytu',
+    category: 'pravo',
+    excerpt:
+      'Průkaz energetické náročnosti, prohlášení vlastníka, potvrzení od SVJ. ' +
+      'Kompletní seznam dokumentů na jednom místě.',
+    body:
+      'Nejčastější zdržení při prodeji nevzniká u kupujícího ani u banky, ale ' +
+      'u chybějících dokumentů. Průkaz energetické náročnosti budovy je ze zákona ' +
+      'povinný už při inzerci, a jeho zpracování trvá zpravidla dva až tři týdny.',
+    hue: 44,
+  },
+]
+
 const SERVICES = [
   {
     title: 'Prodej nemovitostí',
@@ -209,13 +272,31 @@ async function main() {
   })
 
   for (const t of existing.docs) {
-    for (const collection of ['properties', 'services', 'site-settings', 'media'] as const) {
+    for (const collection of ['properties', 'posts', 'services', 'site-settings', 'media'] as const) {
       await payload.delete({
         collection,
         where: { tenant: { equals: t.id } },
         overrideAccess: true,
       })
     }
+
+    /**
+     * Users must go before the tenant.
+     *
+     * The plugin's cleanupAfterTenantDelete removes the tenant from any user
+     * that references it by setting users_tenants.tenant_id to NULL — but that
+     * column is NOT NULL, so the delete fails on a constraint violation. Any
+     * tenant with a site service account hits this.
+     *
+     * The same ordering applies to real deprovisioning: revoke the service
+     * account first, then delete the tenant.
+     */
+    await payload.delete({
+      collection: 'users',
+      where: { 'tenants.tenant': { equals: t.id } },
+      overrideAccess: true,
+    })
+
     await payload.delete({ collection: 'tenants', id: t.id, overrideAccess: true })
   }
 
@@ -301,6 +382,26 @@ async function main() {
     })
   }
 
+  for (const [i, post] of POSTS.entries()) {
+    const cover = await upload(`blog-${i}.jpg`, post.title, post.hue)
+    const published = new Date()
+    published.setDate(published.getDate() - i * 11)
+
+    await payload.create({
+      collection: 'posts',
+      data: {
+        tenant: tenant.id,
+        title: post.title,
+        excerpt: post.excerpt,
+        category: post.category,
+        coverImage: cover.id,
+        publishedAt: published.toISOString(),
+        body: lexical(post.body),
+      } as never,
+      overrideAccess: true,
+    })
+  }
+
   for (const l of LISTINGS) {
     const gallery = []
     for (const [i, room] of ['Obývací pokoj', 'Kuchyně', 'Ložnice', 'Koupelna'].entries()) {
@@ -337,32 +438,14 @@ async function main() {
           region: l.region,
         },
         gallery,
-        description: {
-          root: {
-            type: 'root',
-            format: '',
-            indent: 0,
-            version: 1,
-            direction: 'ltr',
-            children: [
-              {
-                type: 'paragraph',
-                format: '',
-                indent: 0,
-                version: 1,
-                direction: 'ltr',
-                children: [{ type: 'text', text: l.description, version: 1, format: 0 }],
-              },
-            ],
-          },
-        },
+        description: lexical(l.description),
       } as never,
       overrideAccess: true,
     })
   }
 
   console.log(`Demo tenant seeded: ${tenant.name} (id ${tenant.id})`)
-  console.log(`  ${LISTINGS.length} listings, ${SERVICES.length} services`)
+  console.log(`  ${LISTINGS.length} listings, ${SERVICES.length} services, ${POSTS.length} posts`)
   process.exit(0)
 }
 
