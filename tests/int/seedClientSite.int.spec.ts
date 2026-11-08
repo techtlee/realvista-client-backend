@@ -240,9 +240,24 @@ describe('input from env', () => {
     )
   })
 
+  it('refuses starter copy written for a different tone', () => {
+    // The envelope asks for "friendly".
+    const copyPath = join(dir, 'formal-copy.json')
+    writeFileSync(copyPath, JSON.stringify(defaultStarterCopy('formal')))
+    expect(() =>
+      clientSiteInputFromEnv({ ...base, PROVISIONING_REQUEST: reqPath, STARTER_COPY_JSON: copyPath }),
+    ).toThrow(/"formal".*"friendly"/)
+
+    const okPath = join(dir, 'friendly-copy.json')
+    writeFileSync(okPath, JSON.stringify(defaultStarterCopy('friendly')))
+    expect(
+      clientSiteInputFromEnv({ ...base, PROVISIONING_REQUEST: reqPath, STARTER_COPY_JSON: okPath }).copy.tone,
+    ).toBe('friendly')
+  })
+
   it('validates a starter copy file', () => {
     const copyPath = join(dir, 'starter-copy.json')
-    const copy = defaultStarterCopy('formal')
+    const copy = defaultStarterCopy('friendly')
     copy.stats[1]!.value = '180+'
     writeFileSync(copyPath, JSON.stringify(copy))
     expect(() =>

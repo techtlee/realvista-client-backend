@@ -137,9 +137,18 @@ export function clientSiteInputFromEnv(env: Record<string, string | undefined>):
     )
   }
 
+  const tone = request.provisioning.content.tone
   const copy = env.STARTER_COPY_JSON
     ? parse(starterCopySchema, readJson(env.STARTER_COPY_JSON, 'STARTER_COPY_JSON'), 'starter copy')
-    : defaultStarterCopy(request.provisioning.content.tone)
+    : defaultStarterCopy(tone)
+  // The client chose the tone; copy written for another one (e.g. a stale
+  // starter-copy.json after the CRM changed it) must not reach their site.
+  if (copy.tone !== tone) {
+    throw new SeedInputError(
+      `Starter copy tone "${copy.tone}" does not match the request's content.tone "${tone}". ` +
+        'Regenerate or edit the starter copy for the requested tone.',
+    )
+  }
 
   return {
     request,
