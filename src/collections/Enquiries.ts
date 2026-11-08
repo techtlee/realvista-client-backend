@@ -5,10 +5,6 @@ import { tenantAccess, tenantBaseListFilter, tenantWrite } from '../access/tenan
 /**
  * Poptávky — contact-form submissions from a client's own website.
  *
- * Distinct from `leads`, which is the storefront's "I want a website" pipeline
- * and belongs to the platform, not to any tenant. Mixing the two would put our
- * sales pipeline inside a realtor's admin panel.
- *
  * Submitted content is read-only in the admin: it is a record of what a member
  * of the public actually wrote, and a realtor editing it after the fact
  * destroys its value as evidence of consent. Only the handling fields are

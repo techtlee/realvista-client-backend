@@ -8,7 +8,7 @@ import {
 } from '../access/tenantScoped'
 
 /**
- * Realtors and platform staff.
+ * Realtors and platform admins.
  *
  * ## The privilege-escalation landmine
  *

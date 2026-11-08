@@ -9,7 +9,7 @@ import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidat
  * A normal collection rather than a Payload `global`, because globals are not
  * tenant-scoped — one global would be shared by all 80 clients. The
  * one-row-per-tenant rule is enforced in the beforeChange hook below, and
- * `create` is restricted to platform staff so provisioning owns row creation.
+ * `create` is restricted to platform admins so provisioning owns row creation.
  */
 export const SiteSettings: CollectionConfig = {
   slug: 'site-settings',

@@ -9,7 +9,6 @@ import sharp from 'sharp'
 
 import { isPlatformAdminField } from './access/tenantScoped'
 import { Enquiries } from './collections/Enquiries'
-import { Leads } from './collections/Leads'
 import { Media } from './collections/Media'
 import { Posts } from './collections/Posts'
 import { Properties } from './collections/Properties'
@@ -34,8 +33,8 @@ export default buildConfig({
 
   /**
    * Order drives the admin nav. Content first, because that is what a realtor
-   * opens the panel to do; the platform collections are staff-only and several
-   * are hidden from clients entirely.
+   * opens the panel to do; the platform collections are for platform admins and
+   * several are hidden from clients entirely.
    */
   collections: [
     // Per-tenant content
@@ -48,7 +47,6 @@ export default buildConfig({
     // Platform
     Tenants,
     Users,
-    Leads,
   ],
 
   editor: lexicalEditor(),
@@ -115,9 +113,6 @@ export default buildConfig({
        * actual boundary. A collection missing from this list still enforces
        * access but loses the UI scoping; one missing its `access` block is
        * wide open on the API.
-       *
-       * `leads` is deliberately absent — it is the platform's own sales
-       * pipeline and has no tenant.
        */
       collections: {
         'site-settings': { isGlobal: true },

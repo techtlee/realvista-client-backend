@@ -70,10 +70,10 @@ function isAdmin(user: unknown): boolean {
   return (user as ScopedUser | undefined)?.platformRole === 'platform-admin'
 }
 
-/** Collection-level: true only for platform staff. */
+/** Collection-level: true only for platform admins. */
 export const isPlatformAdmin: Access = ({ req: { user } }) => isAdmin(user)
 
-/** Field-level: true only for platform staff. */
+/** Field-level: true only for platform admins. */
 export const isPlatformAdminField: FieldAccess = ({ req: { user } }) => isAdmin(user)
 
 /**

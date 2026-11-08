@@ -7,8 +7,8 @@ export const testUser = {
 }
 
 /**
- * The admin-panel specs navigate collection list views, which requires platform
- * staff. Nothing promotes users implicitly — there is deliberately no
+ * The admin-panel specs navigate collection list views, which requires a platform
+ * admin. Nothing promotes users implicitly — there is deliberately no
  * "first user becomes admin" hook — so the role is set explicitly here.
  */
 const testUserData = { ...testUser, platformRole: 'platform-admin' as const }

@@ -75,7 +75,6 @@ export interface Config {
     'site-settings': SiteSetting;
     tenants: Tenant;
     users: User;
-    leads: Lead;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -91,7 +90,6 @@ export interface Config {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     tenants: TenantsSelect<false> | TenantsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
-    leads: LeadsSelect<false> | LeadsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -694,52 +692,6 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "leads".
- */
-export interface Lead {
-  id: number;
-  name: string;
-  email: string;
-  phone?: string | null;
-  ico?: string | null;
-  companyName?: string | null;
-  /**
-   * Firma a adresa byly načteny podle IČO z registru ARES.
-   */
-  aresVerified?: boolean | null;
-  chosen?: {
-    /**
-     * Předvyplněno podle toho, na co zájemce klikl v galerii.
-     */
-    theme?: string | null;
-    variant?: string | null;
-  };
-  domain?: {
-    situation?: ('have-access' | 'have-no-access' | 'none') | null;
-    name?: string | null;
-    registrar?: ('wedos' | 'forpsi' | 'active24' | 'websupport' | 'gransy' | 'other' | 'unknown') | null;
-    /**
-     * Rozhoduje o tom, zda lze měnit nameservery. Pokud na doméně běží e-mail, nastavujeme pouze A a CNAME záznamy — jinak hrozí výpadek pošty.
-     */
-    emailOnDomain?: ('yes' | 'no' | 'unknown') | null;
-  };
-  portfolioSize?: ('1-5' | '6-20' | '20+') | null;
-  consent?: {
-    given?: boolean | null;
-    text?: string | null;
-    at?: string | null;
-  };
-  status?: ('new' | 'contacted' | 'qualified' | 'approved' | 'provisioned' | 'rejected') | null;
-  /**
-   * Vyplní se automaticky po založení webu.
-   */
-  tenant?: (number | null) | Tenant;
-  internalNote?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -793,10 +745,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'users';
         value: number | User;
-      } | null)
-    | ({
-        relationTo: 'leads';
-        value: number | Lead;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1199,45 +1147,6 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "leads_select".
- */
-export interface LeadsSelect<T extends boolean = true> {
-  name?: T;
-  email?: T;
-  phone?: T;
-  ico?: T;
-  companyName?: T;
-  aresVerified?: T;
-  chosen?:
-    | T
-    | {
-        theme?: T;
-        variant?: T;
-      };
-  domain?:
-    | T
-    | {
-        situation?: T;
-        name?: T;
-        registrar?: T;
-        emailOnDomain?: T;
-      };
-  portfolioSize?: T;
-  consent?:
-    | T
-    | {
-        given?: T;
-        text?: T;
-        at?: T;
-      };
-  status?: T;
-  tenant?: T;
-  internalNote?: T;
-  updatedAt?: T;
-  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

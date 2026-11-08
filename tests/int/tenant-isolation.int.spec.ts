@@ -514,7 +514,6 @@ describe('collection registry', () => {
   const NOT_TENANT_SCOPED = new Set<string>([
     'tenants',
     'users',
-    'leads', // the platform's own sales pipeline; has no tenant by design
     'payload-kv',
     'payload-locked-documents',
     'payload-preferences',
