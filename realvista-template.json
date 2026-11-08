@@ -1,0 +1,55 @@
+{
+  "template": "realvista-client-backend",
+  "templateApiVersion": 1,
+  "scripts": ["migrate", "seed:admin", "seed:client-site", "seed:client", "seed:site-key", "dev", "start"],
+  "contracts": {
+    "dev": {
+      "env": ["PORT"],
+      "note": "Listens on --port ${PORT:-3000}. PORT must be in the process env; it is not read from .env."
+    },
+    "start": {
+      "env": ["PORT"],
+      "note": "As dev."
+    },
+    "migrate": {
+      "env": ["DATABASE_URL", "PAYLOAD_SECRET"]
+    },
+    "seed:admin": {
+      "env": ["MAKLERI_ADMIN_EMAIL", "MAKLERI_ADMIN_PASSWORD"],
+      "note": "Upsert by e-mail."
+    },
+    "seed:client-site": {
+      "env": [
+        "PROVISIONING_REQUEST",
+        "STARTER_COPY_JSON?",
+        "SITE_URL",
+        "REVALIDATE_SECRET",
+        "PLATFORM_SUBDOMAIN_BASE?"
+      ],
+      "envAlternative": [
+        "PROVISIONING_JSON",
+        "TENANT_SLUG",
+        "CLIENT_NAME",
+        "CLIENT_EMAIL",
+        "CLIENT_PHONE?",
+        "COMPANY_NAME?",
+        "COMPANY_ICO?",
+        "COMPANY_CITY?"
+      ],
+      "stdout": ["TENANT_ID=<id>", "# comment lines"],
+      "starterCopySchema": "src/seed/starterCopy.ts#starterCopySchema",
+      "note": "Upserts the tenant by slug and replaces its content; never touches users. Exits after its revalidate pings finish."
+    },
+    "seed:client": {
+      "env": ["TENANT_SLUG", "CLIENT_EMAIL", "CLIENT_NAME", "CLIENT_PASSWORD", "CLIENT_RESET_PASSWORD?"],
+      "stdout": ["CLIENT_USER_ID=<id>", "TENANT=<name> (<id>)", "# created|updated"],
+      "note": "Upsert by e-mail; an existing password is kept unless CLIENT_RESET_PASSWORD=1."
+    },
+    "seed:site-key": {
+      "env": ["TENANT_SLUG", "CMS_PROBE_URL", "SITE_KEY_OUT"],
+      "stdout": ["TENANT_ID=<id>", "# comment lines"],
+      "file": "SITE_KEY_OUT (absolute, or relative to the backend dir): the key only, no name and no trailing newline; mode 0600, written atomically",
+      "note": "Replaces the tenant's site+<slug> account, so the previous key stops working. Exit 1 without writing if the key does not authenticate against CMS_PROBE_URL."
+    }
+  }
+}
