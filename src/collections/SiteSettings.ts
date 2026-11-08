@@ -92,6 +92,17 @@ export const SiteSettings: CollectionConfig = {
                   relationTo: 'media',
                   label: { cs: 'Fotografie na pozadí' },
                 },
+                {
+                  name: 'portrait',
+                  type: 'upload',
+                  relationTo: 'media',
+                  label: { cs: 'Vyříznutý portrét makléře' },
+                  admin: {
+                    description: {
+                      cs: 'Nepovinné. PNG s průhledným pozadím; zobrazí se v úvodu přes fotografii na pozadí, vpravo dole.',
+                    },
+                  },
+                },
               ],
             },
           ],

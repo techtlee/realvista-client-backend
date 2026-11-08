@@ -523,6 +523,10 @@ export interface SiteSetting {
     ctaLabel?: string | null;
     ctaHref?: string | null;
     backgroundImage?: (number | null) | Media;
+    /**
+     * Nepovinné. PNG s průhledným pozadím; zobrazí se v úvodu přes fotografii na pozadí, vpravo dole.
+     */
+    portrait?: (number | null) | Media;
   };
   agent: {
     name: string;
@@ -1006,6 +1010,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         ctaLabel?: T;
         ctaHref?: T;
         backgroundImage?: T;
+        portrait?: T;
       };
   agent?:
     | T

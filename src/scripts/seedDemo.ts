@@ -339,10 +339,12 @@ async function main() {
   }
 
   // The realtor's photography comes from the REALVISTA Figma file (indigo
-  // homepage): the full hero photo, and the same person cut out on a
-  // transparent background for the agent band.
+  // homepage), as layers: the interior behind the hero, and the realtor cut
+  // out on a transparent background, used over it and in the agent band.
+  // The dark homepage's pair (hero-pozadi-tmave.png, makler-portret-tmavy.png)
+  // sits next to them for a dark demo.
   const agentPhoto = await uploadAsset('makler-portret.png', 'Portrét makléře')
-  const heroImage = await uploadAsset('hero-makler.png', 'Makléř v moderním interiéru')
+  const heroImage = await uploadAsset('hero-pozadi.png', 'Světlý moderní interiér')
 
   await payload.create({
     collection: 'site-settings',
@@ -356,6 +358,7 @@ async function main() {
         ctaLabel: 'Nezávazná konzultace',
         ctaHref: '#kontakt',
         backgroundImage: heroImage.id,
+        portrait: agentPhoto.id,
       },
       about: {
         heading: 'O mně',

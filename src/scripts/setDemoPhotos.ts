@@ -39,7 +39,7 @@ async function main() {
   }
 
   const agentPhoto = await uploadAsset('makler-portret.png', 'Portrét makléře')
-  const heroImage = await uploadAsset('hero-makler.png', 'Makléř v moderním interiéru')
+  const heroImage = await uploadAsset('hero-pozadi.png', 'Světlý moderní interiér')
 
   const { docs: settings } = await payload.find({
     collection: 'site-settings',
@@ -54,7 +54,7 @@ async function main() {
     collection: 'site-settings',
     id: current.id,
     data: {
-      hero: { ...current.hero, backgroundImage: heroImage.id },
+      hero: { ...current.hero, backgroundImage: heroImage.id, portrait: agentPhoto.id },
       agent: { ...current.agent, photo: agentPhoto.id },
     },
     overrideAccess: true,
