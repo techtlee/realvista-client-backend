@@ -13,7 +13,7 @@ import type { CollectionAfterChangeHook, CollectionAfterDeleteHook, Payload } fr
  */
 
 interface TenantWithSite {
-  siteUrl?: string | null
+  hosting?: { siteUrl?: string | null } | null
   revalidateSecret?: string | null
 }
 
@@ -40,7 +40,8 @@ async function ping(
     return
   }
 
-  if (!tenant?.siteUrl) return
+  const siteUrl = tenant?.hosting?.siteUrl
+  if (!siteUrl) return
 
   if (!tenant.revalidateSecret) {
     payload.logger.warn(
@@ -49,7 +50,7 @@ async function ping(
     return
   }
 
-  const url = `${tenant.siteUrl.replace(/\/+$/, '')}/api/revalidate`
+  const url = `${siteUrl.replace(/\/+$/, '')}/api/revalidate`
 
   try {
     const res = await fetch(url, {
