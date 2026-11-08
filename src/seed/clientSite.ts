@@ -348,7 +348,6 @@ export async function seedClientSite(
     const tenantData = {
       name: p.brand.name,
       slug,
-      status: 'provisioning' as const,
       theme: { name: p.theme.name, variant: p.theme.variant },
       hosting: {
         domain: p.domain.situation !== 'none' ? p.domain.name : undefined,
@@ -369,7 +368,13 @@ export async function seedClientSite(
           data: tenantData as never,
           overrideAccess: true,
         })
-      : await payload.create({ collection: 'tenants', data: tenantData as never, overrideAccess: true })
+      : await payload.create({
+          collection: 'tenants',
+          // Only a new tenant starts as "provisioning". A re-run must not pull
+          // a tenant that staff already moved to awaiting-dns or live back.
+          data: { ...tenantData, status: 'provisioning' } as never,
+          overrideAccess: true,
+        })
 
     // 2. Content: replaced wholesale. Users are left alone on purpose.
     for (const collection of ['properties', 'posts', 'services', 'site-settings', 'media'] as const) {

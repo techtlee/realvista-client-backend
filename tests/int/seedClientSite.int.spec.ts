@@ -358,9 +358,14 @@ describe('seedClientSite', { timeout: 90_000 }, () => {
       overrideAccess: true,
     })
 
+    expect((await payload.findByID({ collection: 'tenants', id: tenantId, overrideAccess: true })).status).toBe('provisioning')
+    await payload.update({ collection: 'tenants', id: tenantId, data: { status: 'live' } as never, overrideAccess: true })
+
     received.length = 0
     const s = await seedClientSite(payload, input(request()))
     expect(s.tenantId).toBe(tenantId)
+    // A re-run keeps the status staff set.
+    expect((await payload.findByID({ collection: 'tenants', id: tenantId, overrideAccess: true })).status).toBe('live')
     expect(s.pings).toMatchObject({ pending: 0, failed: 0 })
     expect(received.length).toBe(s.pings.sent)
 
