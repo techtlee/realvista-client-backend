@@ -135,6 +135,27 @@ describe('starter copy', () => {
     expect(r.error!.issues[0]!.path).toEqual(['stats', 0])
   })
 
+  it('rejects numbers anywhere outside posts and legal', () => {
+    const about = defaultStarterCopy('formal')
+    about.about.paragraphs[0] = 'Od roku 2010 prodáváme byty a domy.'
+    const a = starterCopySchema.safeParse(about)
+    expect(a.success).toBe(false)
+    expect(a.error!.issues.map((i) => i.path.join('.'))).toContain('about.paragraphs.0')
+    expect(a.error!.issues[0]!.message).toMatch(/No numbers outside posts\/legal/)
+
+    const hours = defaultStarterCopy('friendly')
+    hours.contact.officeHours = 'Po–Pá 9–17'
+    const h = starterCopySchema.safeParse(hours)
+    expect(h.error!.issues.map((i) => i.path.join('.'))).toEqual(['contact.officeHours'])
+
+    // Tokens are not digits, and posts/legal are exempt.
+    const ok = defaultStarterCopy('neutral')
+    ok.contact.officeHours = `${'[DOPLNIT]'} volejte na {phone}`
+    ok.posts[0]!.body[0] = 'Průkaz energetické náročnosti platí 10 let.'
+    ok.legal.privacyPolicy[1] = 'Údaje uchováváme nejdéle 12 měsíců.'
+    expect(starterCopySchema.safeParse(ok).success).toBe(true)
+  })
+
   it('rejects a bio without [DOPLNIT]', () => {
     const copy = defaultStarterCopy('neutral')
     copy.agent.bio = ['Na realitním trhu působím od roku 2014.']

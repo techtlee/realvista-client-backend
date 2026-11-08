@@ -93,6 +93,8 @@ const TYKANI = [
 ]
 const TYKANI_RE = new RegExp(`(?<!\\p{L})(${TYKANI.join('|')})(?!\\p{L})`, 'iu')
 const TOKEN_RE = /\{([A-Za-z]+)\}/g
+/** Sections whose strings may not contain digits. `{phone}` is a token, so it passes. */
+const NO_NUMBERS = new Set(['hero', 'about', 'agent', 'services', 'stats', 'contact'])
 
 const text = (max: number) => z.string().trim().min(1).max(max)
 const paragraphs = z.array(text(1200)).min(1).max(8)
@@ -170,6 +172,15 @@ export const starterCopySchema = z
       }
     }
     for (const { path, value } of strings(copy)) {
+      // Posts are evergreen advice and legal drafts cite retention periods;
+      // everywhere else a number is a claim about the realtor nobody made.
+      if (/\d/.test(value) && NO_NUMBERS.has(String(path[0]))) {
+        ctx.addIssue({
+          code: 'custom',
+          path,
+          message: `No numbers outside posts/legal (no invented facts); use "${DOPLNIT}".`,
+        })
+      }
       const ty = TYKANI_RE.exec(value)
       if (ty) {
         ctx.addIssue({
