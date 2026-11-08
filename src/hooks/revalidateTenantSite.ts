@@ -1,4 +1,4 @@
-import type { CollectionAfterChangeHook, CollectionAfterDeleteHook } from 'payload'
+import type { CollectionAfterChangeHook, CollectionAfterDeleteHook, Payload } from 'payload'
 
 /**
  * Tells a tenant's website that its content changed.
@@ -18,7 +18,7 @@ interface TenantWithSite {
 }
 
 async function ping(
-  payload: { findByID: Function; logger: { warn: Function; error: Function } },
+  payload: Pick<Payload, 'findByID' | 'logger'>,
   tenantId: string | number | null | undefined,
   collection: string,
   slug?: string | null,
