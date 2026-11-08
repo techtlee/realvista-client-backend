@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { tenantAccess, tenantBaseListFilter, tenantIdsFor } from '../access/tenantScoped'
+import { assignTenantOnCreate } from '../hooks/assignTenantOnCreate'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidateTenantSite'
 
 /**
@@ -49,6 +50,7 @@ export const Media: CollectionConfig = {
     afterChange: [revalidateAfterChange('media')],
     afterDelete: [revalidateAfterDelete('media')],
     beforeValidate: [
+      assignTenantOnCreate(),
       ({ data, req, operation }) => {
         if (operation !== 'create' || !data) return data
 

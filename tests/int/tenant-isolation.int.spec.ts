@@ -500,6 +500,109 @@ describe.each(TENANT_COLLECTIONS)('tenant isolation — $slug', ({ slug, seed })
   })
 })
 
+/**
+ * Create is the one operation where a `Where` returned from access cannot
+ * filter anything: there is no existing row to match. Payload does not apply
+ * `tenant in [...]` to the incoming data, so what stops a realtor (or a site's
+ * API key) from writing into another tenant is the plugin's validation on the
+ * `tenant` field, which checks the value against the caller's memberships.
+ * These tests pin that down strictly — rejected, not re-stamped.
+ */
+describe('tenant isolation — create into a foreign tenant', () => {
+  /** What `req.user` looks like when a request authenticates with `users API-Key …`. */
+  const apiKeyUser = () => ({ ...userA, collection: 'users', _strategy: 'api-key' }) as TypedUser
+
+  const REALTOR_CREATABLE = TENANT_COLLECTIONS.filter(
+    // site-settings: platform admins only; enquiries: API key only (below).
+    (c) => c.slug !== 'site-settings' && c.slug !== 'enquiries',
+  )
+
+  it.each(REALTOR_CREATABLE)('$slug: a realtor of A cannot create a row for B', async ({ slug, seed }) => {
+    await expect(
+      payload.create({
+        collection: slug,
+        data: seed(tenantB.id) as never,
+        user: userA,
+        overrideAccess: false,
+      }),
+    ).rejects.toThrow()
+
+    const { totalDocs } = await payload.count({
+      collection: slug,
+      where: { tenant: { equals: tenantB.id } },
+      overrideAccess: true,
+    })
+    expect(totalDocs).toBeLessThanOrEqual(1) // only the row seeded above
+  })
+
+  it("media: a realtor of A cannot upload into B's library", async () => {
+    await expect(
+      payload.create({
+        collection: 'media',
+        data: { alt: 'podvrh', tenant: tenantB.id },
+        file: photoFile('foreign.jpg'),
+        user: userA,
+        overrideAccess: false,
+      }),
+    ).rejects.toThrow()
+  })
+
+  it("enquiries: tenant A's site API key cannot create an enquiry for tenant B", async () => {
+    const before = await payload.count({
+      collection: 'enquiries',
+      where: { tenant: { equals: tenantB.id } },
+      overrideAccess: true,
+    })
+
+    await expect(
+      payload.create({
+        collection: 'enquiries',
+        data: { name: 'Podvržená poptávka', tenant: tenantB.id },
+        user: apiKeyUser(),
+        overrideAccess: false,
+      }),
+    ).rejects.toThrow()
+
+    const after = await payload.count({
+      collection: 'enquiries',
+      where: { tenant: { equals: tenantB.id } },
+      overrideAccess: true,
+    })
+    expect(after.totalDocs).toBe(before.totalDocs)
+  })
+
+  it("enquiries: tenant A's site API key can create an enquiry for A", async () => {
+    const doc = await payload.create({
+      collection: 'enquiries',
+      data: { name: 'Poptávka z webu', tenant: tenantA.id },
+      user: apiKeyUser(),
+      overrideAccess: false,
+    })
+    expect(doc.tenant).toMatchObject({ id: tenantA.id })
+  })
+
+  it('enquiries: with one membership and no tenant sent, the key’s tenant is filled in', async () => {
+    const doc = await payload.create({
+      collection: 'enquiries',
+      data: { name: 'Poptávka bez tenantu' } as never,
+      user: apiKeyUser(),
+      overrideAccess: false,
+    })
+    expect(doc.tenant).toMatchObject({ id: tenantA.id })
+  })
+
+  it('enquiries: a realtor logged in normally cannot create one at all', async () => {
+    await expect(
+      payload.create({
+        collection: 'enquiries',
+        data: { name: 'Ručně psaná', tenant: tenantA.id },
+        user: userA,
+        overrideAccess: false,
+      }),
+    ).rejects.toThrow()
+  })
+})
+
 describe('collection registry', () => {
   /**
    * Catches the actual mistake: adding a tenant-scoped collection and forgetting

@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { tenantAccess, tenantBaseListFilter } from '../access/tenantScoped'
 import { slugifyCzech } from '../lib/czech'
+import { assignTenantOnCreate } from '../hooks/assignTenantOnCreate'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidateTenantSite'
 
 /** Blog — optional per site, toggled by a feature flag in the site config. */
@@ -25,6 +26,7 @@ export const Posts: CollectionConfig = {
     afterChange: [revalidateAfterChange('posts')],
     afterDelete: [revalidateAfterDelete('posts')],
     beforeValidate: [
+      assignTenantOnCreate(),
       ({ data }) => {
         if (!data) return data
         if (!data.slug && typeof data.title === 'string' && data.title.length > 0) {

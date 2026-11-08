@@ -15,6 +15,7 @@ import {
   TRANSACTION_TYPES,
   slugifyCzech,
 } from '../lib/czech'
+import { assignTenantOnCreate } from '../hooks/assignTenantOnCreate'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidateTenantSite'
 
 /**
@@ -62,6 +63,7 @@ export const Properties: CollectionConfig = {
     afterChange: [revalidateAfterChange('properties')],
     afterDelete: [revalidateAfterDelete('properties')],
     beforeValidate: [
+      assignTenantOnCreate(),
       ({ data }) => {
         if (!data) return data
         if (!data.slug && typeof data.title === 'string' && data.title.length > 0) {

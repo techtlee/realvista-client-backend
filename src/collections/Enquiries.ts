@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { tenantAccess, tenantBaseListFilter, tenantWrite } from '../access/tenantScoped'
+import { assignTenantOnCreate } from '../hooks/assignTenantOnCreate'
 
 /**
  * Poptávky — contact-form submissions from a client's own website.
@@ -32,6 +33,10 @@ export const Enquiries: CollectionConfig = {
       if (user.platformRole === 'platform-admin') return true
       return user._strategy === 'api-key' ? tenantWrite(args) : false
     },
+  },
+  hooks: {
+    // The site's API key belongs to one tenant; its form need not send the id.
+    beforeValidate: [assignTenantOnCreate({ fillSingleTenant: true })],
   },
   admin: {
     useAsTitle: 'name',

@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { tenantAccess, tenantBaseListFilter } from '../access/tenantScoped'
+import { assignTenantOnCreate } from '../hooks/assignTenantOnCreate'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidateTenantSite'
 
 /** Služby — what the realtor offers, rendered as the services section. */
@@ -21,6 +22,7 @@ export const Services: CollectionConfig = {
   hooks: {
     afterChange: [revalidateAfterChange('services')],
     afterDelete: [revalidateAfterDelete('services')],
+    beforeValidate: [assignTenantOnCreate()],
   },
   fields: [
     { name: 'title', type: 'text', required: true, localized: true, label: { cs: 'Název' } },
