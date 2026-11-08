@@ -1,6 +1,8 @@
 // Must be first — payload.config reads env at module evaluation time.
 import 'dotenv/config'
 
+import { readFile } from 'node:fs/promises'
+
 import { getPayload } from 'payload'
 import sharp from 'sharp'
 
@@ -326,8 +328,21 @@ async function main() {
     })
   }
 
-  const agentPhoto = await upload('makler.jpg', 'Portrét makléře', 220)
-  const heroImage = await upload('hero.jpg', 'Úvodní fotografie', 215)
+  async function uploadAsset(file: string, alt: string) {
+    const data = await readFile(new URL(`../seed/demo-assets/${file}`, import.meta.url))
+    return payload.create({
+      collection: 'media',
+      data: { alt, tenant: tenant.id },
+      file: { name: file, data, mimetype: 'image/png', size: data.length },
+      overrideAccess: true,
+    })
+  }
+
+  // The realtor's photography comes from the REALVISTA Figma file (indigo
+  // homepage): the full hero photo, and the same person cut out on a
+  // transparent background for the agent band.
+  const agentPhoto = await uploadAsset('makler-portret.png', 'Portrét makléře')
+  const heroImage = await uploadAsset('hero-makler.png', 'Makléř v moderním interiéru')
 
   await payload.create({
     collection: 'site-settings',
