@@ -1,4 +1,6 @@
 import { mkdtempSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from 'node:fs'
+import { createServer, type Server } from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 
@@ -13,6 +15,10 @@ import { mintSiteKey, parseSiteKeyEnv, SiteKeyError, writeSecretFile, writeSiteK
 const SLUG = 'cw2t-key'
 let payload: Payload
 let tenantId: number | string
+// Stands in for the running backend: answers like it does without a key.
+let backend: Server
+let probeUrl: string
+let deadUrl: string
 
 async function cleanup() {
   await payload.delete({ collection: 'users', where: { email: { equals: `site+${SLUG}@makleri.internal` } }, overrideAccess: true })
@@ -26,10 +32,20 @@ beforeAll(async () => {
   payload = await getPayload({ config: await config })
   await cleanup()
   tenantId = (await payload.create({ collection: 'tenants', data: { name: 'CW2 Key', slug: SLUG } as never, overrideAccess: true })).id
+
+  backend = createServer((_req, res) => res.writeHead(403).end())
+  await new Promise<void>((r) => backend.listen(0, '127.0.0.1', r))
+  probeUrl = `http://127.0.0.1:${(backend.address() as AddressInfo).port}`
+  // A port that was free a moment ago and has nothing listening now.
+  const tmp = createServer()
+  await new Promise<void>((r) => tmp.listen(0, '127.0.0.1', r))
+  deadUrl = `http://127.0.0.1:${(tmp.address() as AddressInfo).port}`
+  await new Promise((r) => tmp.close(r))
 })
 
 afterAll(async () => {
   await cleanup()
+  await new Promise((r) => backend.close(r))
 })
 
 describe('parseSiteKeyEnv', () => {
@@ -103,12 +119,12 @@ describe('SITE_KEY_OUT', () => {
 
 describe('mintSiteKey', () => {
   it('mints a key that authenticates as a tenant editor, and a re-mint revokes the old one', async () => {
-    const first = await mintSiteKey(payload, SLUG)
+    const first = await mintSiteKey(payload, SLUG, probeUrl)
     expect(first.tenantId).toBe(tenantId)
     const u1 = await authAs(first.apiKey)
     expect(u1?.email).toBe(`site+${SLUG}@makleri.internal`)
 
-    const second = await mintSiteKey(payload, SLUG)
+    const second = await mintSiteKey(payload, SLUG, probeUrl)
     expect(second.apiKey).not.toBe(first.apiKey)
     expect((await authAs(second.apiKey))?.id).toBe(second.userId)
     expect(await authAs(first.apiKey)).toBeNull()
@@ -117,7 +133,13 @@ describe('mintSiteKey', () => {
     expect(accounts.totalDocs).toBe(1)
   })
 
+  it('keeps the old key when nothing answers at the probe URL', async () => {
+    const current = await mintSiteKey(payload, SLUG, probeUrl)
+    await expect(mintSiteKey(payload, SLUG, deadUrl)).rejects.toThrow(/Nothing answers.*left in place/)
+    expect((await authAs(current.apiKey))?.id).toBe(current.userId)
+  })
+
   it('names an unknown tenant', async () => {
-    await expect(mintSiteKey(payload, 'cw2t-nope')).rejects.toThrow(/cw2t-nope/)
+    await expect(mintSiteKey(payload, 'cw2t-nope', probeUrl)).rejects.toThrow(/cw2t-nope/)
   })
 })

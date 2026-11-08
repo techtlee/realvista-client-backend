@@ -55,7 +55,7 @@ export interface MintedKey {
  * client's content — the same access functions the admin panel goes through.
  * Any previous `site+<slug>` account is replaced, which revokes its key.
  */
-export async function mintSiteKey(payload: Payload, slug: string): Promise<MintedKey> {
+export async function mintSiteKey(payload: Payload, slug: string, probeUrl: string): Promise<MintedKey> {
   const tenants = await payload.find({
     collection: 'tenants',
     where: { slug: { equals: slug } },
@@ -63,6 +63,16 @@ export async function mintSiteKey(payload: Payload, slug: string): Promise<Minte
   })
   const tenant = tenants.docs[0]
   if (!tenant) throw new SiteKeyError(`No tenant with slug "${slug}".`)
+
+  // Revoking the old key is only safe if the new one can be verified. With
+  // nothing answering at probeUrl the run would end with the old key deleted
+  // and the new one unverified, i.e. a site that 403s. Keep the old key.
+  if (!(await probeAnswers(probeUrl))) {
+    throw new SiteKeyError(
+      `Nothing answers at ${probeUrl}, so the new key could not be verified. ` +
+        'Start this backend there and re-run; the existing site key was left in place.',
+    )
+  }
 
   const email = `site+${slug}@makleri.internal`
   const existing = await payload.find({
@@ -103,6 +113,17 @@ export async function mintSiteKey(payload: Payload, slug: string): Promise<Minte
   })
 
   return { tenantId: tenant.id, tenantName: tenant.name, userId: user.id, apiKey }
+}
+
+/**
+ * One unauthenticated GET: does anything answer at probeUrl? Any HTTP status
+ * counts (the endpoint will say 403); only no response at all is a failure.
+ */
+export async function probeAnswers(probeUrl: string): Promise<boolean> {
+  const res = await fetch(`${probeUrl}/api/site-settings?limit=1`, {
+    signal: AbortSignal.timeout(60_000),
+  }).catch(() => null)
+  return res !== null
 }
 
 /**

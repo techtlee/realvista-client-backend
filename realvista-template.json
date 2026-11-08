@@ -49,7 +49,7 @@
       "env": ["TENANT_SLUG", "CMS_PROBE_URL", "SITE_KEY_OUT"],
       "stdout": ["TENANT_ID=<id>", "# comment lines"],
       "file": "SITE_KEY_OUT (absolute, or relative to the backend dir): the key only, no name and no trailing newline; mode 0600, written atomically",
-      "note": "Replaces the tenant's site+<slug> account, so the previous key stops working. Exit 1 without writing if the key does not authenticate against CMS_PROBE_URL."
+      "note": "Replaces the tenant's site+<slug> account, so the previous key stops working. Exit 1 without touching the existing key if nothing answers at CMS_PROBE_URL; exit 1 without writing if the new key does not authenticate there."
     }
   }
 }

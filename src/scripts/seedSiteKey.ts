@@ -32,7 +32,7 @@ async function main() {
 
   let minted
   try {
-    minted = await mintSiteKey(payload, env.tenantSlug)
+    minted = await mintSiteKey(payload, env.tenantSlug, env.probeUrl)
   } catch (err) {
     if (err instanceof SiteKeyError) {
       console.error(err.message)
