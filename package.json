@@ -19,7 +19,10 @@
     "seed:admin": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" node src/scripts/seedAdmin.ts",
     "seed:demo": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" node src/scripts/seedDemo.ts",
     "seed:site-key": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" node src/scripts/seedSiteKey.ts",
-    "seed:client": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" node src/scripts/seedClientUser.ts"
+    "seed:client": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" node src/scripts/seedClientUser.ts",
+    "migrate": "cross-env NODE_OPTIONS=--no-deprecation payload migrate",
+    "migrate:create": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:create",
+    "migrate:status": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:status"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.90.2",

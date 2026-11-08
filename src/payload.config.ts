@@ -17,6 +17,7 @@ import { SiteSettings } from './collections/SiteSettings'
 import { Tenants } from './collections/Tenants'
 import { Users } from './collections/Users'
 import { storagePlugins } from './lib/storage'
+import { migrations } from './migrations'
 import type { Config } from './payload-types'
 
 const filename = fileURLToPath(import.meta.url)
@@ -53,8 +54,20 @@ export default buildConfig({
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
 
+  /**
+   * Development keeps schema push: edit a collection, the dev database follows.
+   *
+   * Production never pushes. Every schema change ships as a migration in
+   * src/migrations (`pnpm migrate:create <name>` after changing a collection),
+   * and `prodMigrations` runs the pending ones when the server boots. Schema
+   * push against a database holding real client data is a silent DROP COLUMN
+   * waiting to happen.
+   */
   db: postgresAdapter({
     pool: { connectionString: process.env.DATABASE_URL || '' },
+    migrationDir: path.resolve(dirname, 'migrations'),
+    push: process.env.NODE_ENV !== 'production',
+    prodMigrations: migrations,
   }),
 
   sharp,
