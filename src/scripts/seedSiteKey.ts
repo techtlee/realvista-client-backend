@@ -3,91 +3,68 @@ import 'dotenv/config'
 import { getPayload } from 'payload'
 
 import config from '../payload.config'
+import { SiteKeyError, mintSiteKey, parseSiteKeyEnv, verifySiteKey, writeSiteKeyFile } from '../seed/siteKey'
 
 /**
- * Mints a read-only service account + API key for one tenant's website.
+ * Mints a read-only service account + API key for one tenant's website and
+ * proves it authenticates against the running backend.
  *
- * The key is scoped by tenant membership, so it can only ever read that
- * client's content — the same access functions the admin panel goes through.
+ *   TENANT_SLUG=… CMS_PROBE_URL=http://localhost:3211 SITE_KEY_OUT=/abs/path pnpm seed:site-key
  *
- *   TENANT_SLUG=demo-reality pnpm seed:site-key
+ * With SITE_KEY_OUT (absolute, or relative to the cwd) the file holds only the
+ * key, no name and no newline (mode 0600, atomic), and stdout carries no secret: only `TENANT_ID=<id>` and a
+ * verification line. Without it the key is printed as before, with a warning,
+ * because stdout ends up in terminals, logs and transcripts.
  */
 async function main() {
-  const slug = process.env.TENANT_SLUG
-  if (!slug) {
-    console.error('Set TENANT_SLUG, e.g. TENANT_SLUG=demo-reality pnpm seed:site-key')
-    process.exit(1)
+  let env
+  try {
+    env = parseSiteKeyEnv(process.env)
+  } catch (err) {
+    if (err instanceof SiteKeyError) {
+      console.error(err.message)
+      process.exit(1)
+    }
+    throw err
   }
 
   const payload = await getPayload({ config: await config })
 
-  const tenants = await payload.find({
-    collection: 'tenants',
-    where: { slug: { equals: slug } },
-    overrideAccess: true,
-  })
-  const tenant = tenants.docs[0]
-  if (!tenant) {
-    console.error(`No tenant with slug "${slug}"`)
-    process.exit(1)
+  let minted
+  try {
+    minted = await mintSiteKey(payload, env.tenantSlug)
+  } catch (err) {
+    if (err instanceof SiteKeyError) {
+      console.error(err.message)
+      process.exit(1)
+    }
+    throw err
   }
 
-  const email = `site+${slug}@makleri.internal`
-  const existing = await payload.find({
-    collection: 'users',
-    where: { email: { equals: email } },
-    overrideAccess: true,
-  })
-  for (const u of existing.docs) {
-    await payload.delete({ collection: 'users', id: u.id, overrideAccess: true })
-  }
-
-  // Payload stores the API key encrypted and never returns it — not even with
-  // showHiddenFields, which exposes only a `hasAPIKey` flag. The plaintext is
-  // therefore whatever we set here, and this is the only moment it is knowable.
-  const apiKey = crypto.randomUUID()
-
-  const user = await payload.create({
-    collection: 'users',
-    data: {
-      email,
-      password: crypto.randomUUID(),
-      name: `Web ${tenant.name}`,
-      platformRole: 'client',
-      tenants: [{ tenant: tenant.id, role: 'editor' }],
-      enableAPIKey: true,
-    } as never,
-    overrideAccess: true,
-  })
-
-  // Set the key in a second write. On create, Payload does not compute the
-  // lookup index for a supplied apiKey, so the key is stored but never matches
-  // on authentication — the failure is silent until the site 403s.
-  await payload.update({
-    collection: 'users',
-    id: user.id,
-    data: { enableAPIKey: true, apiKey } as never,
-    overrideAccess: true,
-  })
-
-  // Prove the key works before handing it over. A silently broken key surfaces
-  // as a 403 on the live site, which is a much worse place to discover it.
-  const probe = await fetch(`${process.env.CMS_PROBE_URL ?? 'http://localhost:3000'}/api/site-settings?limit=1`, {
-    headers: { Authorization: `users API-Key ${apiKey}` },
-  }).catch(() => null)
-
-  if (!probe || !probe.ok) {
+  // A silently broken key surfaces as a 403 on the live site, which is a much
+  // worse place to discover it.
+  const status = await verifySiteKey(env.probeUrl, minted.apiKey)
+  if (status !== 200) {
     console.error(
-      `The minted key did not authenticate (HTTP ${probe?.status ?? 'no response'}). ` +
-        `Is the CMS running on ${process.env.CMS_PROBE_URL ?? 'http://localhost:3000'}?`,
+      `The minted key did not authenticate (HTTP ${status ?? 'no response'}) against ${env.probeUrl}. ` +
+        'Is this backend running there?',
     )
     process.exit(1)
   }
 
-  console.log(`TENANT_ID=${tenant.id}`)
-  console.log(`CMS_API_KEY=${apiKey}`)
-  console.log(`# verified: HTTP ${probe.status} from /api/site-settings (user ${user.id})`)
+  console.log(`TENANT_ID=${minted.tenantId}`)
+  if (env.out) {
+    writeSiteKeyFile(env.out, minted.apiKey)
+    console.log(`# key written to ${env.out} (0600)`)
+  } else {
+    console.error('warning: SITE_KEY_OUT is unset, so the key is printed to stdout. Prefer SITE_KEY_OUT.')
+    console.log(`CMS_API_KEY=${minted.apiKey}`)
+  }
+  console.log(`# verified: HTTP ${status} from ${env.probeUrl}/api/site-settings (user ${minted.userId})`)
   process.exit(0)
 }
 
-void main()
+main().catch((err: unknown) => {
+  console.error(err)
+  process.exit(1)
+})
